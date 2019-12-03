@@ -1,0 +1,6 @@
+1. Navigate to the angular app folder
+2. Run "ng serve" to run the app on the local server
+or
+2. Run "ng build --prod" to create a distributable version of your angular app
+3. Navigate to dist/[project name] and edit index.html
+4. Replace this line <base href="/"> with <base href="[your remote app url]">

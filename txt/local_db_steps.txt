@@ -1,0 +1,3 @@
+0. mysql.server start
+1. CREATE USER datahunter_admin@localhost IDENTIFIED BY 'datahunter_admin';
+2. GRANT ALL PRIVILEGES ON * . * TO datahunter_admin@localhost;

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+       #map {
+         height: 400px;
+         width: 400px;
+       }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    Source address:<br>
+    <input type="text" id="src_addr" value="ARC, Champaign">
+    <br>
+    Destination address:<br>
+    <input type="text" id="dst_addr" value="707 South fourth street, Champaign">
+    <br><br>
+    <button type="button" id="find_route">Submit</button>
+
+    <a href="/">Login stuff</a>
+    <script>
+      var map, infoWindow, directionsService, directionsRenderer;
+      function initMap() {
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 2,
+          center: {lat: -33.865427, lng: 151.196123}
+        });
+        directionsRenderer.setMap(map);
+
+        infoWindow = new google.maps.InfoWindow;
+
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            infoWindow.setPosition(pos);
+            // infoWindow.setContent('You are here!');
+            // infoWindow.open(map);
+            map.setCenter(pos);
+            map.setZoom(17);
+          }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+          });
+        } else {
+          handleLocationError(false, infoWindow, map.getCenter());
+        }
+      }
+
+      function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(browserHasGeolocation ?
+                              'Error: The Geolocation service failed.' :
+                              'Error: Your browser doesn\'t support geolocation.');
+        infoWindow.open(map);
+      }
+
+      document.getElementById("find_route").addEventListener("click", calcRoute);
+
+      function calcRoute(){
+        src = document.getElementById("src_addr").value;
+        dst = document.getElementById("dst_addr").value;
+        console.log("Find route from "+src+" to "+dst);
+        var request = {
+          origin: src,
+          destination: dst,
+          travelMode: 'DRIVING',
+          drivingOptions: {
+            departureTime: new Date(Date.now()),
+            trafficModel: 'bestguess'
+          },
+          unitSystem: google.maps.UnitSystem.IMPERIAL,
+          waypoints: [],
+          provideRouteAlternatives: true
+        }
+        directionsService.route(request, function(result, status) {
+          if (status == 'OK') {
+            console.log(result);
+            step = result.routes[0].legs[0].steps;
+            for (var j = 0; j < step.length; j++) {
+            console.log("Printing step "+j);
+              console.log("   Start lat: "+step[j].start_location.lat()+", long: "+step[j].start_location.lng());
+              console.log("   End: lat: "+step[j].end_location.lat()+", long: "+step[j].end_location.lng());
+              console.log("   Printing array");
+              for (var i = 0; i < step[j].lat_lngs.length; i++) {
+               console.log("      i: "+i+", lat: "+step[j].lat_lngs[i].lat()+", long: "+step[j].lat_lngs[i].lng());
+              }
+            }
+            directionsRenderer.setDirections(result);
+          }
+        });
+
+      }
+
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">
+    </script>
+  </body>
+</html>
