@@ -97,17 +97,13 @@
                         //   }
             }
             console.log(q_data);
-            // $.ajax({
-            //   url: "/node/accident_count",
-            //   data: {
-            //
-            //       // start_lat : step[j].start_location.lat(),
-            //       // start_long: step[j].start_location.lng(),
-            //       // end_lat   : step[j].end_location.lat(),
-            //       // end_long  : step[j].end_location.lng(),
-            //       // arr : {a: 0, b: 1, c: 2, d: 3}
-            //     }
-            // });
+            $.ajax({
+              url: "/node/accident_count",
+              data: { q: q_data },
+              success: function(result){
+                console.log(result);
+              }
+            });
             directionsRenderer.setDirections(result);
           }
         });

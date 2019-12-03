@@ -6,7 +6,7 @@ var app           =  express();
 var os            =  require("os");
 var car           =  require("./my_modules/car.js");
 var user          =  require("./my_modules/user.js");
-const g           =  require('@google/maps').createClient({ key: 'AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY' });
+// const g           =  require('@google/maps').createClient({ key: 'AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY' });
 const MongoClient =  require('mongodb').MongoClient;
 var dateTime      =  require('node-datetime');
 
@@ -34,7 +34,14 @@ else{
 
 con.connect(function(err) {
   if (err) throw err;
-  console.log("Connected!");
+  console.log("Connected to mySQL dB!");
+});
+
+const mongo_uri = "mongodb+srv://datahunter_admin:datahunter_admin@chicago-crashes-c68oc.gcp.mongodb.net/test?retryWrites=true&w=majority";
+const mongo_client = new MongoClient(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongo_client.connect(function(err){
+  if (err) throw err;
+  console.log("Connected to Mongo dB!");
 });
 
 //Handle navigation
@@ -92,38 +99,40 @@ app.get('/map/', function(req, res){
   nav('./map.html', fs, res);
 });
 app.get('/node/accident_count', async function(req, res){
-  var s0 = parseFloat(req.query.start_lat);
-  var s1 = parseFloat(req.query.start_long);
-  var e0 = parseFloat(req.query.end_lat);
-  var e1 = parseFloat(req.query.end_long);
-  console.log(req.query.arr);
-  var larger0  = (s0 > e0)? s0 : e0;
-  var smaller0 = (s0 > e0)? e0 : s0;
-  var larger1  = (s1 > e1)? s1 : e1;
-  var smaller1 = (s1 > e1)? e1 : s1;
-  const uri = "mongodb+srv://datahunter_admin:datahunter_admin@chicago-crashes-c68oc.gcp.mongodb.net/test?retryWrites=true&w=majority";
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  try {
-        await client.connect();
-        const collection = client.db("accident").collection("chicago");
-        var num_of_incidents = await collection.countDocuments({
-          $and : [
-            { LATITUDE : { $gte: String(smaller0), $lte: String(larger0) } },
-            { LONGITUDE: { $gte: String(larger1), $lte: String(smaller1) } },
-          ]
-        });
-        num_of_incidents = String(num_of_incidents);
-        console.log(num_of_incidents);
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(num_of_incidents);
-        res.end();
+  const collection = mongo_client.db("accident").collection("chicago");
+  var sum_incidents = 0;
+  var q = req.query.q;
+  for (var i = 0; i < q.length; i++) {
+    var s0 = parseFloat(q[i].start_lat);
+    var s1 = parseFloat(q[i].start_long);
+    var e0 = parseFloat(q[i].end_lat);
+    var e1 = parseFloat(q[i].end_long);
+    var larger0  = (s0 > e0)? s0 : e0;
+    var smaller0 = (s0 > e0)? e0 : s0;
+    var larger1  = (s1 > e1)? s1 : e1;
+    var smaller1 = (s1 > e1)? e1 : s1;
+
+    var num_of_incidents = await collection.countDocuments({
+      $and : [
+        { LATITUDE : { $gte: String(smaller0), $lte: String(larger0) } },
+        { LONGITUDE: { $gte: String(larger1), $lte: String(smaller1) } },
+      ]
+    });
+    console.log(num_of_incidents);
+    sum_incidents += num_of_incidents;
+    // num_of_incidents = String(num_of_incidents);
   }
-  catch (e) {
-        console.error(e);
-  }
-  finally {
-        await client.close();
-  }
+  console.log("Sum: "+sum_incidents);
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.write(String(sum_incidents));
+  res.end();
+  // }
+  // catch (e) {
+  //
+  // }
+  // finally {
+  //       await client.close();
+  // }
   // res.write("Server request was as follows:\nStart latitude: "+req.query.start_lat+", longitude: "+req.query.start_long+"\nEnd latitude: "+req.query.end_lat+", longitude: "+req.query.end_long);
   // res.write("Edited request:\nSmaller latitude: "+smaller0+", longitude: "+smaller1+"\nLarger latitude: "+larger0+", longitude: "+larger1);
 });
