@@ -9,19 +9,20 @@
     </style>
   </head>
   <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <div id="map"></div>
 
     Source address:<br>
-    <input type="text" id="src_addr" value="ARC, Champaign">
+    <input type="text" id="src_addr" value="Union station, Chicago">
     <br>
     Destination address:<br>
-    <input type="text" id="dst_addr" value="707 South fourth street, Champaign">
+    <input type="text" id="dst_addr" value="Navy pier, Chicago">
     <br><br>
     <button type="button" id="find_route">Submit</button>
 
     <a href="/">Login stuff</a>
     <script>
-      var map, infoWindow, directionsService, directionsRenderer;
+      var map, infoWindow, directionsService, directionsRenderer, num_of_incidents = 0;
       function initMap() {
         directionsService = new google.maps.DirectionsService();
         directionsRenderer = new google.maps.DirectionsRenderer();
@@ -33,7 +34,6 @@
 
         infoWindow = new google.maps.InfoWindow;
 
-        // Try HTML5 geolocation.
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(function(position) {
             var pos = {
@@ -41,8 +41,6 @@
               lng: position.coords.longitude
             };
             infoWindow.setPosition(pos);
-            // infoWindow.setContent('You are here!');
-            // infoWindow.open(map);
             map.setCenter(pos);
             map.setZoom(17);
           }, function() {
@@ -79,25 +77,42 @@
           waypoints: [],
           provideRouteAlternatives: true
         }
+        // var ajaxes = [];
         directionsService.route(request, function(result, status) {
           if (status == 'OK') {
             console.log(result);
+            var q_data = []
             step = result.routes[0].legs[0].steps;
             for (var j = 0; j < step.length; j++) {
-            console.log("Printing step "+j);
-              console.log("   Start lat: "+step[j].start_location.lat()+", long: "+step[j].start_location.lng());
-              console.log("   End: lat: "+step[j].end_location.lat()+", long: "+step[j].end_location.lng());
-              console.log("   Printing array");
-              for (var i = 0; i < step[j].lat_lngs.length; i++) {
-               console.log("      i: "+i+", lat: "+step[j].lat_lngs[i].lat()+", long: "+step[j].lat_lngs[i].lng());
-              }
+              q_data.push({
+                start_lat : step[j].start_location.lat(),
+                start_long: step[j].start_location.lng(),
+                end_lat   : step[j].end_location.lat(),
+                end_long  : step[j].end_location.lng()
+              });
+              console.log(j+". "+step[j].instructions);
+                        //   console.log("   Printing array");
+                        //   for (var i = 0; i < step[j].lat_lngs.length; i++) {
+                        //    console.log("      i: "+i+", lat: "+step[j].lat_lngs[i].lat()+", long: "+step[j].lat_lngs[i].lng());
+                        //   }
             }
+            console.log(q_data);
+            // $.ajax({
+            //   url: "/node/accident_count",
+            //   data: {
+            //
+            //       // start_lat : step[j].start_location.lat(),
+            //       // start_long: step[j].start_location.lng(),
+            //       // end_lat   : step[j].end_location.lat(),
+            //       // end_long  : step[j].end_location.lng(),
+            //       // arr : {a: 0, b: 1, c: 2, d: 3}
+            //     }
+            // });
             directionsRenderer.setDirections(result);
           }
         });
 
       }
-
     </script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">
