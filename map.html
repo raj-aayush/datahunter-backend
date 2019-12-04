@@ -21,25 +21,22 @@
     <input type="text" id="dst_addr" value="Navy pier, Chicago">
     <br><br>
     <button type="button" id="find_route">Submit</button></br>
-    <div class="progress">
-      <div class="progress-bar progress-bar-striped active" id="q_progress" role="progressbar"
-      aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%">
-        0%
-      </div>
-    </div></br>
+    <div id="progress_bars">
+    </div>
+  </br>
 
     <a href="/">Login stuff</a>
     <script>
       var del_lat = 1/3600, del_lng = 1/3600;
-      var map, infoWindow, directionsService, directionsRenderer;
+      var map, infoWindow, directionsService, directionsRenderer = [];
       function initMap() {
         directionsService = new google.maps.DirectionsService();
-        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.push(new google.maps.DirectionsRenderer());
         map = new google.maps.Map(document.getElementById('map'), {
           zoom: 2,
           center: {lat: -33.865427, lng: 151.196123}
         });
-        directionsRenderer.setMap(map);
+        directionsRenderer[0].setMap(map);
 
         infoWindow = new google.maps.InfoWindow;
 
@@ -86,70 +83,86 @@
           waypoints: [],
           provideRouteAlternatives: true
         }
-        function computed_incidents(total_incidents, error){
-          $("#q_progress").addClass("progress-bar-success");
-          $("#q_progress").removeClass("progress-bar-striped");
-          $("#q_progress").removeClass("active");
-          $("#q_progress").parent().hide();
-          $("#find_route").show();
-          console.log("Total number of incidents on route: "+total_incidents);
+        function computed_incidents(total_incidents, error, route_i){
+          $("#progress_bars").find("#q"+route_i+"_progress").addClass("progress-bar-success");
+          $("#progress_bars").find("#q"+route_i+"_progress").removeClass("progress-bar-striped");
+          $("#progress_bars").find("#q"+route_i+"_progress").removeClass("active");
+          console.log("Total number of incidents on route "+route_i+": "+total_incidents);
         }
 
-        function reset_progress_bar(){
-          $("#q_progress").css( "width", 0+"%" );
-          $("#q_progress").html( 0+"%" );
-          $("#q_progress").addClass("progress-bar-striped");
-          $("#q_progress").addClass("active");
-          $("#q_progress").removeClass("progress-bar-success");
-          $("#q_progress").parent().show();
+        function computed_all_routes(){
+          $("#progress_bars").empty();
+          $("#find_route").show();
+        }
+
+        function reset_progress_bar(i){
+          var id = 'q'+i+'_progress';
+          $("#progress_bars").append('<div class="progress"> <div class="progress-bar progress-bar-striped active" id="'+id+'" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%"> 0% </div> </div>');
+
+          // $("#"+id).css( "width", 0+"%" );
+          // $("#"+id).html( 0+"%" );
+          // $("#"+id).addClass("progress-bar-striped");
+          // $("#"+id).addClass("active");
+          // $("#"+id).removeClass("progress-bar-success");
+          // $("#"+id).parent().show();
           $("#find_route").hide();
         }
 
-        function update_progress_bar(total, pending){
-          $("#q_progress").css( "width", (((total - pending)/total)*100).toFixed(2)+"%" );
-          $("#q_progress").html( (((total - pending)/total)*100).toFixed(2)+"%" );
+        function update_progress_bar(total, pending, route_i){
+          $("#progress_bars").find("#q"+route_i+"_progress").css( "width", (((total - pending)/total)*100).toFixed(2)+"%" );
+          $("#progress_bars").find("#q"+route_i+"_progress").html( (((total - pending)/total)*100).toFixed(2)+"%" );
         }
 
         directionsService.route(request, function(result, status) {
           if (status == 'OK') {
-            console.log(result.routes);
-            reset_progress_bar();
-            step = result.routes[0].legs[0].steps;
-            var num_pending_ajax_calls = step.length, total_incidents = 0;
-            for (var j = 0; j < step.length; j++) {
-              var q_data = [], points = step[j].lat_lngs;
-              for (var i = 0; i < step[j].lat_lngs.length; i++) {
-                q_data.push([ points[i].lat(), points[i].lng() ]);
-              }
-              $.ajax({
-                url: "/node/accident_count",
-                contentType: "application/x-www-form-urlencoded; charset=utf-8",
-                data: { q: JSON.stringify(q_data) },
-                method: "POST",
-                timeout: 0,
-                success: function(result){
-                  num_pending_ajax_calls--;
-                  update_progress_bar(step.length, num_pending_ajax_calls);
-                  total_incidents += parseInt(result);
-                  if(num_pending_ajax_calls == 0){
-                    computed_incidents(total_incidents, false);
-                  }
-                },
-                error: function(error){
-                  num_pending_ajax_calls--;
-                  console.log("Recieved error from server. Skipping some steps");
-                  if(num_pending_ajax_calls == 0){
-                    console.log("Total number of incidents on route (skipping some steps): "+total_incidents);
-                  }
-                }
-              });
-            }
-            // console.log(q_data);
-            directionsRenderer.setDirections(result);
-          }
-        });
+            var num_pending_ajax_calls = [], total_incidents = [], result_copy = result,
+            routes_remaining = result.routes.length;
 
-      }
+            for(var curr_route = 0; curr_route < result.routes.length; curr_route++){
+                reset_progress_bar(curr_route);
+                step = result.routes[curr_route].legs[0].steps;
+                total_incidents[curr_route] = 0;
+                num_pending_ajax_calls[curr_route] = step.length;
+                for (var j = 0; j < step.length; j++) {
+                    var q_data = [], points = step[j].lat_lngs;
+                    for (var i = 0; i < step[j].lat_lngs.length; i++)
+                        q_data.push([ points[i].lat(), points[i].lng() ]);
+                    $.ajax({
+                        url: "/node/accident_count",
+                        contentType: "application/x-www-form-urlencoded; charset=utf-8",
+                        data: { q: JSON.stringify(q_data), route: curr_route },
+                        method: "POST",
+                        timeout: 0,
+                        success: function(result){
+                            result = result.split("\n");
+                            var curr_route = result[1];
+                            num_pending_ajax_calls[curr_route]--;
+                            update_progress_bar(step.length, num_pending_ajax_calls[curr_route], curr_route);
+                            total_incidents[curr_route] += parseInt(result[0]);
+                            if(num_pending_ajax_calls[curr_route] == 0){
+                                routes_remaining--;
+                                computed_incidents(total_incidents[curr_route], false, curr_route);
+                                if(routes_remaining == 0)
+                                    computed_all_routes();
+                            }
+                        },
+                        error: function(error){
+                            num_pending_ajax_calls[curr_route]--;
+                            console.log("Recieved error from server. Skipping some steps");
+                            if(num_pending_ajax_calls[curr_route] == 0){
+                                console.log("Total number of incidents on route (skipping some steps): "+total_incidents[curr_route]);
+                            }
+                        }
+                    });
+                }
+                if (curr_route != 0) directionsRenderer.push(new google.maps.DirectionsRenderer());
+                result_copy.routes[0] = result_copy.routes[curr_route];
+                directionsRenderer[curr_route].setDirections(result);
+                directionsRenderer[curr_route].setMap(map);
+            }
+        }
+      });
+    }
     </script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">

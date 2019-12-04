@@ -61,6 +61,7 @@ app.post('/node/accident_count', async function(req, res){
   const collection = mongo_client.db("accident").collection("chicago");
   var sum_incidents = 0;
   var q = JSON.parse(req.body.q);
+  var route_i = req.body.route;
   for (var i = 0; i < q.length; i++) {
     var s0 = parseFloat(q[i][0])-del_lat;
     var s1 = parseFloat(q[i][1])-del_lng;
@@ -83,7 +84,7 @@ app.post('/node/accident_count', async function(req, res){
   var resp = String(sum_incidents);
 
   res.writeHead(200, {'Content-Type': 'text/html'});
-  res.write(resp);
+  res.write(resp+"\n"+route_i);
   res.end();
 });
 
