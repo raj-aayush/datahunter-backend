@@ -6,16 +6,80 @@ var fs            =  require('fs');
 var os            =  require("os");
 var car           =  require("./my_modules/car.js");
 var user          =  require("./my_modules/user.js");
-// const g           =  require('@google/maps').createClient({ key: 'AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY' });
 const MongoClient =  require('mongodb').MongoClient;
 var dateTime      =  require('node-datetime');
+var cookieParser  =  require('cookie-parser');
+var session       =  require('express-session');
 
 // A second around Chicago is ~ 30m in latitude and ~23m in longitude
 var del_lat = 1/7200, del_lng = 1/7200;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-// app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+    key: 'user_id',
+    secret: 'datahunter_secret_key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { expires: 600000 }
+}));
+
+app.use((req, res, next) => {
+    if (req.cookies.user_id && !req.session.user) res.clearCookie('user_id');
+    next();
+});
+var sessionChecker = (req, res, next) => {
+    if (req.session.user && req.cookies.user_id) res.redirect('/nav/dashboard');
+    else next();
+};
+app.get('/', sessionChecker, (req, res) => {
+    res.redirect('/nav/login');
+});
+app.get('/nav/logout', (req, res) => {
+    if (req.session.user && req.cookies.user_id) {
+        res.clearCookie('user_id');
+        res.redirect('/');
+    } else {
+        res.redirect('/nav/login');
+    }
+});
+app.route('/nav/signup')
+    .get(sessionChecker, (req, res) => { res.sendFile(__dirname + '/html/signup.html') })
+    .post((req, res) => {
+      var username = req.body.username, password = req.body.password,
+      fname = req.body.first_name, lname = req.body.last_name;
+      var q = "INSERT INTO user (first_name, last_name, username, password) VALUES (\""+fname+"\", \""+lname+"\", \""+username+"\", \""+password+"\")";
+      console.log(q);
+      con.query(q, function (err, result) {
+        if (err) res.redirect('/nav/signup');
+        else{
+            req.session.user = username;
+            res.redirect('/nav/dashboard');
+        }
+      });
+    });
+ app.route('/nav/login')
+    .get(sessionChecker, (req, res) => { res.sendFile(__dirname + '/html/login.html') })
+    .post((req, res) => {
+        var username = req.body.username, password = req.body.password;
+        var q = "SELECT username,password FROM user WHERE username=\""+username+"\" AND password=\""+password+"\"";
+        console.log(q);
+        con.query(q, function (err, result, fields) {
+          if (err || result.length != 1) res.redirect('/nav/login');
+          else {
+            req.session.user = username;
+            res.redirect('/nav/dashboard');
+          }
+        });
+    });
+app.get('/nav/dashboard', (req, res) => {
+    if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/dashboard.html');
+    else  res.redirect('/nav/login');
+});
+app.use(function (req, res, next) {
+  res.status(404).send("404 error: File not found!")
+});
 
 if (os.hostname().search("web.illinois.edu") == -1){
   var con = mysql.createConnection({
@@ -49,7 +113,7 @@ mongo_client.connect(function(err){
 });
 
 //Handle navigation
-app.get('/',async function(req,res){
+app.get('/login',async function(req,res){
   nav('./login.html', fs, res);
 });
 app.get('/map/', function(req, res){
@@ -63,20 +127,14 @@ app.post('/node/accident_count', async function(req, res){
   var q = JSON.parse(req.body.q);
   var route_i = req.body.route;
   for (var i = 0; i < q.length; i++) {
-    var s0 = parseFloat(q[i][0])-del_lat;
-    var s1 = parseFloat(q[i][1])-del_lng;
-    var e0 = parseFloat(q[i][0])+del_lat;
-    var e1 = parseFloat(q[i][1])+del_lng;
-    var larger0  = (s0 > e0)? s0 : e0;
-    var smaller0 = (s0 > e0)? e0 : s0;
-    var larger1  = (s1 > e1)? s1 : e1;
-    var smaller1 = (s1 > e1)? e1 : s1;
+    var smaller0 = parseFloat(q[i][0])-del_lat;
+    var smaller1 = parseFloat(q[i][1])-del_lng;
+    var larger0 = parseFloat(q[i][0])+del_lat;
+    var larger1 = parseFloat(q[i][1])+del_lng;
 
     var num_of_incidents = await collection.countDocuments({
-      $and : [
-        { LATITUDE : { $gte: String(smaller0), $lte: String(larger0) } },
-        { LONGITUDE: { $gte: String(larger1), $lte: String(smaller1) } }
-      ]
+      $and : [  { LATITUDE : { $gte: String(smaller0), $lte: String(larger0) } },
+                { LONGITUDE: { $gte: String(larger1), $lte: String(smaller1) } }  ]
     });
     sum_incidents += num_of_incidents;
   }
@@ -88,12 +146,12 @@ app.post('/node/accident_count', async function(req, res){
   res.end();
 });
 
-app.post('/node/user/login'     , function(req, res){
-  user.login(con, req.body.username, req.body.password, res);
-});
-app.post('/node/user/create'    , function(req, res){
-  user.create(con, req.body.username, req.body.password, req.body.first_name, req.body.last_name, res);
-});
+// app.post('/node/user/login'     , function(req, res){
+//   user.login(con, req.body.username, req.body.password, res);
+// });
+// app.post('/node/user/create'    , function(req, res){
+//   user.create(con, req.body.username, req.body.password, req.body.first_name, req.body.last_name, res);
+// });
 app.post('/node/user/query'     , function(req, res){
   user.get(con, req.body.username, res);
 });

@@ -108,6 +108,7 @@
 
         directionsService.route(request, function(result, status) {
           if (status == 'OK') {
+            console.log(result.routes);
             var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
             result_copy = result, routes_remaining = result.routes.length;
 
