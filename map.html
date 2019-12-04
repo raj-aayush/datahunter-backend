@@ -98,13 +98,6 @@
         function reset_progress_bar(i){
           var id = 'q'+i+'_progress';
           $("#progress_bars").append('<div class="progress"> <div class="progress-bar progress-bar-striped active" id="'+id+'" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%"> 0% </div> </div>');
-
-          // $("#"+id).css( "width", 0+"%" );
-          // $("#"+id).html( 0+"%" );
-          // $("#"+id).addClass("progress-bar-striped");
-          // $("#"+id).addClass("active");
-          // $("#"+id).removeClass("progress-bar-success");
-          // $("#"+id).parent().show();
           $("#find_route").hide();
         }
 
@@ -115,13 +108,13 @@
 
         directionsService.route(request, function(result, status) {
           if (status == 'OK') {
-            var num_pending_ajax_calls = [], total_incidents = [], result_copy = result,
-            routes_remaining = result.routes.length;
+            var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
+            result_copy = result, routes_remaining = result.routes.length;
 
             for(var curr_route = 0; curr_route < result.routes.length; curr_route++){
                 reset_progress_bar(curr_route);
                 step = result.routes[curr_route].legs[0].steps;
-                total_incidents[curr_route] = 0;
+                total_incidents[curr_route] = 0, total_steps[curr_route] = step.length;
                 num_pending_ajax_calls[curr_route] = step.length;
                 for (var j = 0; j < step.length; j++) {
                     var q_data = [], points = step[j].lat_lngs;
@@ -137,7 +130,7 @@
                             result = result.split("\n");
                             var curr_route = result[1];
                             num_pending_ajax_calls[curr_route]--;
-                            update_progress_bar(step.length, num_pending_ajax_calls[curr_route], curr_route);
+                            update_progress_bar(total_steps[curr_route], num_pending_ajax_calls[curr_route], curr_route);
                             total_incidents[curr_route] += parseInt(result[0]);
                             if(num_pending_ajax_calls[curr_route] == 0){
                                 routes_remaining--;
