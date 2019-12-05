@@ -68,7 +68,6 @@ exports.get_cars = function(con, username, res){
   console.log(q);
   con.query(q, function (err, result, fields) {
     if (err) throw err;
-    // var ret = (result.length == 1)? JSON.stringify(result): "invalid";
     console.log(result);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.write(JSON.stringify(result));

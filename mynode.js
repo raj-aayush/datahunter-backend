@@ -206,20 +206,20 @@ app.post('/node/user/delete'    , function(req, res){
   user.delete(con, req.session.user, res);
 });
 app.post('/node/user/cars_query', function(req, res){
-  user.get_cars(con, req.body.username, res);
+  user.get_cars(con, req.session.user, res);
 });
 
 app.post('/node/car/create'     , function(req, res){
-  car.create(con, req.body.username, req.body.brand, req.body.model, req.body.licence, res);
+  car.create(con, req.session.user, req.body.brand, req.body.model, req.body.licence, res);
 });
 app.post('/node/car/query'      , function(req, res){
   car.get(con, req.body.id, res);
 });
 app.post('/node/car/update'     , function(req, res){
-  car.update(con, req.body.id, req.body.username, req.body.brand, req.body.model, req.body.licence, res);
+  car.update(con, req.body.id, req.session.user, req.body.brand, req.body.model, req.body.licence, res);
 });
 app.post('/node/car/delete'     , function(req, res){
-  car.delete(con, req.body.id, res);
+  car.delete(con, req.body.car_id, res);
 });
 app.use(function (req, res, next) {
   res.status(404).send("404 error: File not found!")

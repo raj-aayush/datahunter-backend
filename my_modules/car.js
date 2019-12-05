@@ -44,9 +44,6 @@ exports.delete = function(con, car_id, res){
   console.log(q);
   con.query(q, function (err, result, fields) {
     if (err) throw err;
-    var ret = JSON.stringify(result);
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write(ret);
-    res.end();
+    res.redirect('/nav/cars');
   });
 }

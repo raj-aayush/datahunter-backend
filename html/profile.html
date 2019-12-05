@@ -1,21 +1,5 @@
 <!DOCTYPE html>
 <html>
-    <style>
-      body, html {
-        height: 100%;
-        margin: 0;
-      }
-
-    .bg {
-        background-image: url("/img/road.jpeg");
-        background-position: center;
-        background-repeat: no-repeat;
-        height: 100%;
-      }
-      .edit_section{
-        margin-top: 10px
-      }
-    </style>
     <head>
         <title>MyProfile</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
@@ -24,9 +8,40 @@
     </head>
 
     <body class="container bg">
+        <style>
+          body, html {
+            height: 100%;
+            margin: 0;
+          }
+
+        .bg {
+            background-image: url("/img/road.jpeg");
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100%;
+          }
+          .edit_section{
+            margin-top: 10px
+          }
+        </style>
         <div class="page-header">
             <h1 align="center" style="color:white;">Profile</h1>
         </div>
+          <nav class="navbar navbar-default">
+              <div class="container-fluid">
+                  <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
+                      <ul class="nav navbar-nav">
+                          <li><a href="/nav/dashboard">Home</a></li>
+                          <li><a href="/nav/profile">My Profile</a></li>
+                          <li><a href="/nav/cars">My Cars</a></li>
+                          <!-- <li><a href="/nav/routes">My Routes</a></li> -->
+                      </ul>
+                      <ul class="nav navbar-nav navbar-right">
+                          <li><a href="/nav/logout">Log Out</a></li>
+                      </ul>
+                  </div>
+              </div>
+          </nav>
 
         <div class="container row">
             <div class="jumbotron col-sm-12 pull-center">
@@ -47,8 +62,8 @@
                     <label>&nbsp;&nbsp;Password:</label>
                     <input type="password" id="password_display" name="password" size="20" placeholder="Change Password">
                   </div>
-                  <input class="btn btn-primary" style="padding 5px;" type="button" id="update_profile" value="Update"></input>
-                  <input class="btn btn-danger" style="padding 5px;" type="button" id="delete_profile" value="Delete"></input>
+                  <input class="btn btn-primary" style="padding 5px; margin-top:10px;" type="button" id="update_profile" value="Update"></input>
+                  <input class="btn btn-danger" style="padding 5px; margin-top:10px;" type="button" id="delete_profile" value="Delete"></input>
                 </form>
             </div>
         </div>
