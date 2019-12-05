@@ -1,11 +1,27 @@
 <html>
+    <style>
+       #map {
+         height: 400px;
+         width: 400px;
+       }
+       .map-button{
+         height:20px;
+         position:relative;
+         /* margin: -20px -50px; */
+         width:200px;
+         top:60%;
+         left:40%;
+       }
+    </style>
     <head>
         <title>Login Here</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
     </head>
     <body class="container">
         <div class="page-header">
-            <h1>Simple Auth-System</h1>
+            <h1 align="center">Welcome to Driving Assistant!</h1>
         </div>
 
         <nav class="navbar navbar-default">
@@ -13,21 +29,175 @@
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/nav/signup">Sign Up</a></li>
-                        <li><a href="/nav/dashboard">Dashboard</a></li>
+                        <li><a href="/nav/dashboard">Home</a></li>
+                        <li><a href="/nav/myprofile">My Profile</a></li>
+                        <li><a href="/nav/mycars">My Cars</a></li>
+                        <li><a href="/nav/myroutes">My Routes</a></li>
                     </ul>
 
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a href="/nav/login">Log In</a></li>
-                        <li><a href="/nav/logout">Log Out</a></li>
+                        <li><a href="login.html">Log Out</a></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
 
         <div class="container row">
-           <h1>Hi, Welcome to your Dashboard</h1>
+           <h2 align="center">Hi, this is your Dashboard! Enter your start and end points to find safe route options as well as the best places to park!</h2>
         </div>
+        <br>
+        <div style="width:100%;"id="map"></div>
+
+        <div class="container">
+          <form>
+            <div class="form-group">
+              <label align="center" for="start_point">Starting Address</label>
+              <input type="text" class="form-control" id="src_addr" placeholder="Starting Point">
+            </div>
+            <div class="form-group">
+              <label for="end_point">Destination Address</label>
+              <input type="text" class="form-control" id="dst_addr" placeholder="Destination">
+            </div>
+            <button class="btn btn-primary" style: "padding 5px;" type="submit" id="find_route">Find Safe Routes!</button>
+          </form>
+        </div>
+
+        <div id="progress_bars"></div>
+
+        <script>
+          var del_lat = 1/3600, del_lng = 1/3600;
+          var map, infoWindow, directionsService, directionsRenderer = [];
+          function initMap() {
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer.push(new google.maps.DirectionsRenderer());
+            map = new google.maps.Map(document.getElementById('map'), {
+              zoom: 2,
+              center: {lat: -33.865427, lng: 151.196123}
+            });
+            directionsRenderer[0].setMap(map);
+
+            infoWindow = new google.maps.InfoWindow;
+
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(function(position) {
+                var pos = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                };
+                infoWindow.setPosition(pos);
+                map.setCenter(pos);
+                map.setZoom(17);
+              }, function() {
+                handleLocationError(true, infoWindow, map.getCenter());
+              });
+            } else {
+              handleLocationError(false, infoWindow, map.getCenter());
+            }
+          }
+
+          function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(browserHasGeolocation ?
+                                  'Error: The Geolocation service failed.' :
+                                  'Error: Your browser doesn\'t support geolocation.');
+            infoWindow.open(map);
+          }
+
+          document.getElementById("find_route").addEventListener("click", calcRoute);
+
+          function calcRoute(){
+            src = document.getElementById("src_addr").value;
+            dst = document.getElementById("dst_addr").value;
+            console.log("Find route from "+src+" to "+dst);
+            var request = {
+              origin: src,
+              destination: dst,
+              travelMode: 'DRIVING',
+              drivingOptions: {
+                departureTime: new Date(Date.now()),
+                trafficModel: 'bestguess'
+              },
+              unitSystem: google.maps.UnitSystem.IMPERIAL,
+              waypoints: [],
+              provideRouteAlternatives: true
+            }
+            function computed_incidents(total_incidents, error, route_i){
+              $("#progress_bars").find("#q"+route_i+"_progress").addClass("progress-bar-success");
+              $("#progress_bars").find("#q"+route_i+"_progress").removeClass("progress-bar-striped");
+              $("#progress_bars").find("#q"+route_i+"_progress").removeClass("active");
+              console.log("Total number of incidents on route "+route_i+": "+total_incidents);
+            }
+
+            function computed_all_routes(){
+              $("#progress_bars").empty();
+              $("#find_route").show();
+            }
+
+            function reset_progress_bar(i){
+              var id = 'q'+i+'_progress';
+              $("#progress_bars").append('<div class="progress"> <div class="progress-bar progress-bar-striped active" id="'+id+'" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%"> 0% </div> </div>');
+              $("#find_route").hide();
+            }
+
+            function update_progress_bar(total, pending, route_i){
+              $("#progress_bars").find("#q"+route_i+"_progress").css( "width", (((total - pending)/total)*100).toFixed(2)+"%" );
+              $("#progress_bars").find("#q"+route_i+"_progress").html( (((total - pending)/total)*100).toFixed(2)+"%" );
+            }
+
+            directionsService.route(request, function(result, status) {
+              if (status == 'OK') {
+                console.log(result.routes);
+                var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
+                result_copy = result, routes_remaining = result.routes.length;
+
+                for(var curr_route = 0; curr_route < result.routes.length; curr_route++){
+                    reset_progress_bar(curr_route);
+                    step = result.routes[curr_route].legs[0].steps;
+                    total_incidents[curr_route] = 0, total_steps[curr_route] = step.length;
+                    num_pending_ajax_calls[curr_route] = step.length;
+                    for (var j = 0; j < step.length; j++) {
+                        var q_data = [], points = step[j].lat_lngs;
+                        for (var i = 0; i < step[j].lat_lngs.length; i++)
+                            q_data.push([ points[i].lat(), points[i].lng() ]);
+                        $.ajax({
+                            url: "/node/accident_count",
+                            contentType: "application/x-www-form-urlencoded; charset=utf-8",
+                            data: { q: JSON.stringify(q_data), route: curr_route },
+                            method: "POST",
+                            timeout: 0,
+                            success: function(result){
+                                result = result.split("\n");
+                                var curr_route = result[1];
+                                num_pending_ajax_calls[curr_route]--;
+                                update_progress_bar(total_steps[curr_route], num_pending_ajax_calls[curr_route], curr_route);
+                                total_incidents[curr_route] += parseInt(result[0]);
+                                if(num_pending_ajax_calls[curr_route] == 0){
+                                    routes_remaining--;
+                                    computed_incidents(total_incidents[curr_route], false, curr_route);
+                                    if(routes_remaining == 0)
+                                        computed_all_routes();
+                                }
+                            },
+                            error: function(error){
+                                num_pending_ajax_calls[curr_route]--;
+                                console.log("Recieved error from server. Skipping some steps");
+                                if(num_pending_ajax_calls[curr_route] == 0){
+                                    console.log("Total number of incidents on route (skipping some steps): "+total_incidents[curr_route]);
+                                }
+                            }
+                        });
+                    }
+                    if (curr_route != 0) directionsRenderer.push(new google.maps.DirectionsRenderer());
+                    result_copy.routes[0] = result_copy.routes[curr_route];
+                    directionsRenderer[curr_route].setDirections(result);
+                    directionsRenderer[curr_route].setMap(map);
+                }
+            }
+          });
+        }
+        </script>
+        <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">
+        </script>
     </body>
 </html>

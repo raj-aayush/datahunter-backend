@@ -1,34 +1,35 @@
 <html>
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+      }
+
+    .bg {
+        /* The image used */
+        background-image: url("traffic.jpeg");
+
+        /* Full height */
+        height: 100%;
+
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
     <head>
         <title>Login Here</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
     </head>
-    <body class="container">
+    <body class="container bg">
         <div class="page-header">
-            <h1>Simple Auth-System</h1>
+            <h1 align="center" style="color:white;">Welcome to Driving Assistant!</h1>
         </div>
 
-        <nav class="navbar navbar-default">
-            <div class="container-fluid">
-                <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav">
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/nav/signup">Sign Up</a></li>
-                        <li><a href="/nav/dashboard">Dashboard</a></li>
-                    </ul>
-
-                    <ul class="nav navbar-nav navbar-right">
-                        <li><a href="/nav/login">Log In</a></li>
-                        <li><a href="/nav/logout">Log Out</a></li>
-                    </ul>
-                </div><!-- /.navbar-collapse -->
-            </div><!-- /.container-fluid -->
-        </nav>
-
         <div class="container row">
-            <div class="jumbotron col-sm-4 pull-center">
-                <form action="/nav/login" method="post">
+            <div class="jumbotron col-sm-12 pull-center">
+                <form align="center" action="/nav/login" method="post">
                     <div>
                         <label>Username:</label>
                         <input type="text" name="username"/>
@@ -37,8 +38,9 @@
                         <label>Password:</label>
                         <input type="password" name="password"/>
                     </div>
-                    <div>
-                        <input class="btn btn-primary" type="submit" value="Log In"/>
+                    <div style="margin-left:70px; margin-top: 5px;">
+                        <input class="btn btn-primary" style:"padding: 5px;" type="submit" value="Log In"/>
+                        <input class="btn btn-primary" type="button" onclick="location.href='signup.html';" value="Sign Up Here!"/>
                     </div>
                 </form>
             </div>
