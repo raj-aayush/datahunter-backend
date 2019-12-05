@@ -63,7 +63,8 @@
 
         <script>
           var del_lat = 1/3600, del_lng = 1/3600;
-          var map, infoWindow, directionsService, directionsRenderer = [];
+          var map, infoWindow, directionsService, directionsRenderer = [],
+          heatMap;
           function initMap() {
             directionsService = new google.maps.DirectionsService();
             directionsRenderer.push(new google.maps.DirectionsRenderer());
@@ -74,6 +75,9 @@
             directionsRenderer[0].setMap(map);
 
             infoWindow = new google.maps.InfoWindow;
+            heatMap = new google.maps.visualization.HeatmapLayer({
+              data: []
+            });
 
             // if (navigator.geolocation) {
             //   navigator.geolocation.getCurrentPosition(function(position) {
@@ -104,6 +108,7 @@
 
           $("#parking_heat_map_btn").click(function(){
             console.log("Looking for parking violations");
+            heatMap.setMap(null);
             lat = $("#parking_lat").val();
             long = $("#parking_long").val();
             $.ajax({
@@ -120,10 +125,10 @@
                     for(var i = 0; i < result.a.length; i++)
                       heatmapData.push(new google.maps.LatLng(a[i][0], a[i][1]));
                     // console.log(heatmapData);
-                    var heatmap = new google.maps.visualization.HeatmapLayer({
+                    heatMap = new google.maps.visualization.HeatmapLayer({
                       data: heatmapData
                     });
-                    heatmap.setMap(map);
+                    heatMap.setMap(map);
                 },
                 error: function(error){
                     console.log("Server returned error");
