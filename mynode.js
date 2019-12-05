@@ -77,9 +77,6 @@ app.get('/nav/dashboard', (req, res) => {
     if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/dashboard.html');
     else  res.redirect('/nav/login');
 });
-app.use(function (req, res, next) {
-  res.status(404).send("404 error: File not found!")
-});
 
 if (os.hostname().search("web.illinois.edu") == -1){
   var con = mysql.createConnection({
@@ -104,6 +101,8 @@ con.connect(function(err) {
   if (err) throw err;
   console.log("Connected to mySQL dB!");
 });
+
+app.get('/img/traffic.jpeg', (req, res) => { console.log("Recieved request"); res.sendFile(__dirname + '/html/traffic.jpeg') });
 
 const mongo_uri = "mongodb+srv://datahunter_admin:datahunter_admin@chicago-crashes-c68oc.gcp.mongodb.net/test?retryWrites=true&w=majority";
 const mongo_client = new MongoClient(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -176,6 +175,9 @@ app.post('/node/car/update'     , function(req, res){
 });
 app.post('/node/car/delete'     , function(req, res){
   car.delete(con, req.body.id, res);
+});
+app.use(function (req, res, next) {
+  res.status(404).send("404 error: File not found!")
 });
 
 app.listen(3000,function(){
