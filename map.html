@@ -15,13 +15,18 @@
     <div id="map"></div>
 
     Source address:<br>
-    <input type="text" id="src_addr" value="Tribune Tower, Chicago">
+    <input type="text" id="src_addr" value="Union station, Chicago">
     <br>
     Destination address:<br>
-    <input type="text" id="dst_addr" value="Navy pier, Chicago">
+    <input type="text" id="dst_addr" value="Willis tower, Chicago">
     <br><br>
     <button type="button" id="find_route">Submit</button></br>
     <div id="progress_bars">
+    </div>
+    <div>
+      <input type="hidden" id="parking_lat" value=""></input>
+      <input type="hidden" id="parking_long" value=""></input>
+      <button type="button" id="parking_heat_map_btn">Get parking info</button>
     </div>
   </br>
 
@@ -67,6 +72,35 @@
 
       document.getElementById("find_route").addEventListener("click", calcRoute);
 
+      $("#parking_heat_map_btn").click(function(){
+        console.log("Looking for parking violations");
+        lat = $("#parking_lat").val();
+        long = $("#parking_long").val();
+        $.ajax({
+            url: "/node/parking_violation",
+            data: { lat: lat, long: long },
+            method: "POST",
+            timeout: 0,
+            success: function(result){
+                result = JSON.parse(result);
+                console.log("Recieved server response");
+                console.log(result.a);
+                var a = result.a;
+                var heatmapData = [];
+                for(var i = 0; i < result.a.length; i++)
+                  heatmapData.push(new google.maps.LatLng(a[i][0], a[i][1]));
+                console.log(heatmapData);
+                var heatmap = new google.maps.visualization.HeatmapLayer({
+                  data: heatmapData
+                });
+                heatmap.setMap(map);
+            },
+            error: function(error){
+                console.log("Server returned error");
+            }
+        });
+      });
+
       function calcRoute(){
         src = document.getElementById("src_addr").value;
         dst = document.getElementById("dst_addr").value;
@@ -109,6 +143,8 @@
         directionsService.route(request, function(result, status) {
           if (status == 'OK') {
             console.log(result.routes);
+            $("#parking_lat").val(result.routes[0].legs[0].end_location.lat());
+            $("#parking_long").val(result.routes[0].legs[0].end_location.lng());
             var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
             result_copy = result, routes_remaining = result.routes.length;
 
@@ -159,7 +195,7 @@
     }
     </script>
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap&libraries=visualization">
     </script>
   </body>
 </html>

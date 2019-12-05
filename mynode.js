@@ -13,6 +13,7 @@ var session       =  require('express-session');
 
 // A second around Chicago is ~ 30m in latitude and ~23m in longitude
 var del_lat = 1/7200, del_lng = 1/7200;
+var del_lat_p = 0.01, del_long_p = 0.015;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -59,7 +60,7 @@ app.route('/nav/signup')
         }
       });
     });
- app.route('/nav/login')
+app.route('/nav/login')
     .get(sessionChecker, (req, res) => { res.sendFile(__dirname + '/html/login.html') })
     .post((req, res) => {
         var username = req.body.username, password = req.body.password;
@@ -86,6 +87,13 @@ if (os.hostname().search("web.illinois.edu") == -1){
     insecureAuth : true,
     database: "datahunter_user"
   });
+  var parking_db_con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "password",
+    insecureAuth : true,
+    database: "datahunter_tickets"
+  });
 }
 else{
   var con = mysql.createConnection({
@@ -95,11 +103,22 @@ else{
     insecureAuth : true,
     database: "datahunter_user_info"
   });
+  var parking_db_con = mysql.createConnection({
+    host: "localhost",
+    user: "datahunter_admin",
+    password: "datahunter_admin",
+    insecureAuth : true,
+    database: "datahunter_tickets"
+  });
 }
 
 con.connect(function(err) {
   if (err) throw err;
   console.log("Connected to mySQL dB!");
+});
+parking_db_con.connect(function(err) {
+  if (err) throw err;
+  console.log("Connected to parking ticket mySQL dB!");
 });
 
 app.get('/img/traffic.jpeg', (req, res) => { console.log("Recieved request"); res.sendFile(__dirname + '/html/traffic.jpeg') });
@@ -145,6 +164,27 @@ app.post('/node/accident_count', async function(req, res){
   res.end();
 });
 
+//Handle parking violation requests to sql
+app.post('/node/parking_violation', async function(req, res){
+    console.log("Get parking violations");
+      var lat = req.body.lat, long = req.body.long;
+      var start_lat  = parseFloat(lat)  - del_lat_p,
+      end_lat  = parseFloat(lat)  + del_lat_p,
+      start_long = parseFloat(long) - del_long_p,
+      end_long = parseFloat(long) + del_long_p
+      var q = "CALL p_ticket("+start_lat+", "+end_lat+", "+start_long+", "+end_long+");";
+      console.log(q);
+      parking_db_con.query(q, function (err, result, fields) {
+        if (err) throw err;
+        var ret = [];
+        for(var i = 0; i < result[0].length; i++)
+            ret.push([ JSON.stringify(result[0][i].geocoded_lat), JSON.stringify(result[0][i].geocoded_lng) ]);
+        // console.log({a: ret});
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.write(JSON.stringify({a: ret}));
+        res.end();
+      });
+});
 // app.post('/node/user/login'     , function(req, res){
 //   user.login(con, req.body.username, req.body.password, res);
 // });
