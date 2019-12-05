@@ -44,9 +44,7 @@ exports.delete = function(con, username, res){
   console.log(q);
   con.query(q, function (err, result, fields) {
     if (err) throw err;
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write("0");
-    res.end();
+    res.redirect('/nav/logout');
   });
 }
 

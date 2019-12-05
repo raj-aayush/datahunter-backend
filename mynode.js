@@ -78,6 +78,17 @@ app.get('/nav/dashboard', (req, res) => {
     if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/dashboard.html');
     else  res.redirect('/nav/login');
 });
+app.get('/nav', (req, res) => {
+    res.redirect('/nav/login');
+});
+app.get('/nav/cars', (req, res) => {
+    if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/cars.html');
+    else  res.redirect('/nav/login');
+});
+app.get('/nav/profile', (req, res) => {
+    if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/profile.html');
+    else  res.redirect('/nav/login');
+});
 
 if (os.hostname().search("web.illinois.edu") == -1){
   var con = mysql.createConnection({
@@ -121,7 +132,8 @@ parking_db_con.connect(function(err) {
   console.log("Connected to parking ticket mySQL dB!");
 });
 
-app.get('/img/traffic.jpeg', (req, res) => { console.log("Recieved request"); res.sendFile(__dirname + '/html/traffic.jpeg') });
+app.get('/img/traffic.jpeg', (req, res) => { res.sendFile(__dirname + '/html/traffic.jpeg') });
+app.get('/img/road.jpeg'   , (req, res) => { res.sendFile(__dirname + '/html/road.jpeg'   ) });
 
 const mongo_uri = "mongodb+srv://datahunter_admin:datahunter_admin@chicago-crashes-c68oc.gcp.mongodb.net/test?retryWrites=true&w=majority";
 const mongo_client = new MongoClient(mongo_uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -179,26 +191,19 @@ app.post('/node/parking_violation', async function(req, res){
         var ret = [];
         for(var i = 0; i < result[0].length; i++)
             ret.push([ JSON.stringify(result[0][i].geocoded_lat), JSON.stringify(result[0][i].geocoded_lng) ]);
-        // console.log({a: ret});
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.write(JSON.stringify({a: ret}));
         res.end();
       });
 });
-// app.post('/node/user/login'     , function(req, res){
-//   user.login(con, req.body.username, req.body.password, res);
-// });
-// app.post('/node/user/create'    , function(req, res){
-//   user.create(con, req.body.username, req.body.password, req.body.first_name, req.body.last_name, res);
-// });
-app.post('/node/user/query'     , function(req, res){
-  user.get(con, req.body.username, res);
+app.get('/node/user/query'     , function(req, res){
+  user.get(con, req.session.user, res);
 });
 app.post('/node/user/update'    , function(req, res){
   user.update(con, req.body.username, req.body.password, req.body.first_name, req.body.last_name, res);
 });
 app.post('/node/user/delete'    , function(req, res){
-  user.delete(con, req.body.username, res);
+  user.delete(con, req.session.user, res);
 });
 app.post('/node/user/cars_query', function(req, res){
   user.get_cars(con, req.body.username, res);

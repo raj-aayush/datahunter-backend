@@ -26,26 +26,19 @@
 
         <nav class="navbar navbar-default">
             <div class="container-fluid">
-                <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
                         <li><a href="/nav/dashboard">Home</a></li>
-                        <li><a href="/nav/myprofile">My Profile</a></li>
-                        <li><a href="/nav/mycars">My Cars</a></li>
-                        <li><a href="/nav/myroutes">My Routes</a></li>
+                        <li><a href="/nav/profile">My Profile</a></li>
+                        <li><a href="/nav/cars">My Cars</a></li>
+                        <li><a href="/nav/routes">My Routes</a></li>
                     </ul>
-
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a href="login.html">Log Out</a></li>
+                        <li><a href="/nav/logout">Log Out</a></li>
                     </ul>
-                </div><!-- /.navbar-collapse -->
-            </div><!-- /.container-fluid -->
+                </div>
+            </div>
         </nav>
-
-        <div class="container row">
-           <h2 align="center">Hi, this is your Dashboard! Enter your start and end points to find safe route options as well as the best places to park!</h2>
-        </div>
-        <br>
         <div style="width:100%;"id="map"></div>
 
         <div class="container">
@@ -58,7 +51,12 @@
               <label for="end_point">Destination Address</label>
               <input type="text" class="form-control" id="dst_addr" placeholder="Destination">
             </div>
-            <button class="btn btn-primary" style: "padding 5px;" type="submit" id="find_route">Find Safe Routes!</button>
+            <div>
+              <input type="hidden" id="parking_lat" value=""></input>
+              <input type="hidden" id="parking_long" value=""></input>
+              <button class="btn btn-primary" style="padding 5px;" type="button" id="find_route">Find Safe Routes!</button>
+              <button class="btn btn-primary" style="padding 5px;" type="button" id="parking_heat_map_btn">Get parking info</button>
+            </div>
           </form>
         </div>
 
@@ -105,6 +103,35 @@
 
           document.getElementById("find_route").addEventListener("click", calcRoute);
 
+          $("#parking_heat_map_btn").click(function(){
+            console.log("Looking for parking violations");
+            lat = $("#parking_lat").val();
+            long = $("#parking_long").val();
+            $.ajax({
+                url: "/node/parking_violation",
+                data: { lat: lat, long: long },
+                method: "POST",
+                timeout: 0,
+                success: function(result){
+                    result = JSON.parse(result);
+                    console.log("Recieved server response");
+                    console.log(result.a);
+                    var a = result.a;
+                    var heatmapData = [];
+                    for(var i = 0; i < result.a.length; i++)
+                      heatmapData.push(new google.maps.LatLng(a[i][0], a[i][1]));
+                    console.log(heatmapData);
+                    var heatmap = new google.maps.visualization.HeatmapLayer({
+                      data: heatmapData
+                    });
+                    heatmap.setMap(map);
+                },
+                error: function(error){
+                    console.log("Server returned error");
+                }
+            });
+          });
+
           function calcRoute(){
             src = document.getElementById("src_addr").value;
             dst = document.getElementById("dst_addr").value;
@@ -147,6 +174,8 @@
             directionsService.route(request, function(result, status) {
               if (status == 'OK') {
                 console.log(result.routes);
+                $("#parking_lat").val(result.routes[0].legs[0].end_location.lat());
+                $("#parking_long").val(result.routes[0].legs[0].end_location.lng());
                 var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
                 result_copy = result, routes_remaining = result.routes.length;
 
@@ -197,7 +226,7 @@
         }
         </script>
         <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap">
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc1JPdVDs1d9vMufechtLWkfyHaxq1NuY&callback=initMap&libraries=visualization">
         </script>
     </body>
 </html>

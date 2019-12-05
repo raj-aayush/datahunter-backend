@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+      }
+
+    .bg {
+        background-image: url("/img/road.jpeg");
+        background-position: center;
+        background-repeat: no-repeat;
+        height: 100%;
+      }
+      .edit_section{
+        margin-top: 10px
+      }
+    </style>
+    <head>
+        <title>MyProfile</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    </head>
+
+    <body class="container bg">
+        <div class="page-header">
+            <h1 align="center" style="color:white;">Profile</h1>
+        </div>
+
+        <div class="container row">
+            <div class="jumbotron col-sm-12 pull-center">
+                <form align="center">
+                  <div class="edit_section">
+                    <label>&nbsp;Username:</label>
+                    <input type="TEXT" id="username_display" name="username" size="20" placeholder="" readonly style="background-color:Gainsboro">
+                  </div>
+                  <div class="edit_section">
+                    <label>First Name: </label>
+                    <input type="TEXT" id="fname_display" name="first_name" size="20" placeholder="Change First Name">
+                  </div>
+                  <div class="edit_section">
+                    <label>Last Name: </label>
+                    <input type="TEXT" id="lname_display" name="last_name" size="20" placeholder="Change Last Name">
+                  </div>
+                  <div class="edit_section">
+                    <label>&nbsp;&nbsp;Password:</label>
+                    <input type="password" id="password_display" name="password" size="20" placeholder="Change Password">
+                  </div>
+                  <input class="btn btn-primary" style="padding 5px;" type="button" id="update_profile" value="Update"></input>
+                  <input class="btn btn-danger" style="padding 5px;" type="button" id="delete_profile" value="Delete"></input>
+                </form>
+            </div>
+        </div>
+        <script>
+          $(document).ready(function(){
+            $.ajax({
+              url: '../node/user/query',
+              method: "GET",
+              success: function(result){
+                result = JSON.parse(result)[0];
+                $("#username_display").val(result.username);
+                $("#fname_display").val(result.first_name);
+                $("#lname_display").val(result.last_name);
+                $("#password_display").val(result.password);
+              }
+            });
+            $("#update_profile").click(function(){
+              $.ajax({
+                url: '../node/user/update',
+                method: "POST",
+                data: {
+                  username: $("#username_display").val(),
+                  first_name: $("#fname_display").val(),
+                  last_name: $("#lname_display").val(),
+                  password: $("#password_display").val()
+                },
+                success: function(result){
+                    console.log("Changes saved");
+                }
+              });
+            });
+            $("#delete_profile").click(function(){
+              $.ajax({
+                url: '../node/user/delete',
+                method: "POST",
+                success: function(result){
+                    console.log("Deleted profile");
+                    window.location.href = "/nav/login";
+                }
+              });
+            });
+          });
+        </script>
+    </body>
+</html>
