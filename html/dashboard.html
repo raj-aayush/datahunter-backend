@@ -7,7 +7,6 @@
        .map-button{
          height:20px;
          position:relative;
-         /* margin: -20px -50px; */
          width:200px;
          top:60%;
          left:40%;
@@ -31,7 +30,7 @@
                         <li><a href="/nav/dashboard">Home</a></li>
                         <li><a href="/nav/profile">My Profile</a></li>
                         <li><a href="/nav/cars">My Cars</a></li>
-                        <li><a href="/nav/routes">My Routes</a></li>
+                        <!-- <li><a href="/nav/routes">My Routes</a></li> -->
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="/nav/logout">Log Out</a></li>
@@ -42,20 +41,20 @@
         <div style="width:100%;"id="map"></div>
 
         <div class="container">
-          <form>
-            <div class="form-group">
-              <label align="center" for="start_point">Starting Address</label>
-              <input type="text" class="form-control" id="src_addr" placeholder="Starting Point">
-            </div>
-            <div class="form-group">
-              <label for="end_point">Destination Address</label>
-              <input type="text" class="form-control" id="dst_addr" placeholder="Destination">
-            </div>
+          <form></br>
+            <div class="row">
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="src_addr" style="width:96%; margin-top: 10px;" placeholder="Starting Address">
+              </div>
+              <div class="col-sm-6" style="padding-left: 0px">
+                <input type="text" class="form-control" id="dst_addr" style="width:93%; margin-top: 10px;" placeholder="Destination Address">
+              </div>
+            </div></br>
             <div>
               <input type="hidden" id="parking_lat" value=""></input>
               <input type="hidden" id="parking_long" value=""></input>
-              <button class="btn btn-primary" style="padding 5px;" type="button" id="find_route">Find Safe Routes!</button>
-              <button class="btn btn-primary" style="padding 5px;" type="button" id="parking_heat_map_btn">Get parking info</button>
+              <button class="btn btn-primary" style="padding 5px; width:48%;" type="button" id="find_route">Find Safe Routes</button>
+              <button class="btn btn-primary btn-light" style="padding 5px; width:48%;" type="button" id="parking_heat_map_btn" disabled>Get parking info</button>
             </div>
           </form>
         </div>
@@ -69,28 +68,28 @@
             directionsService = new google.maps.DirectionsService();
             directionsRenderer.push(new google.maps.DirectionsRenderer());
             map = new google.maps.Map(document.getElementById('map'), {
-              zoom: 2,
-              center: {lat: -33.865427, lng: 151.196123}
+              zoom: 12,
+              center: {lat: 41.88, lng: -87.63}
             });
             directionsRenderer[0].setMap(map);
 
             infoWindow = new google.maps.InfoWindow;
 
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(function(position) {
-                var pos = {
-                  lat: position.coords.latitude,
-                  lng: position.coords.longitude
-                };
-                infoWindow.setPosition(pos);
-                map.setCenter(pos);
-                map.setZoom(17);
-              }, function() {
-                handleLocationError(true, infoWindow, map.getCenter());
-              });
-            } else {
-              handleLocationError(false, infoWindow, map.getCenter());
-            }
+            // if (navigator.geolocation) {
+            //   navigator.geolocation.getCurrentPosition(function(position) {
+            //     var pos = {
+            //       lat: position.coords.latitude,
+            //       lng: position.coords.longitude
+            //     };
+            //     infoWindow.setPosition(pos);
+            //     map.setCenter(pos);
+            //     map.setZoom(17);
+            //   }, function() {
+            //     handleLocationError(true, infoWindow, map.getCenter());
+            //   });
+            // } else {
+            //   handleLocationError(false, infoWindow, map.getCenter());
+            // }
           }
 
           function handleLocationError(browserHasGeolocation, infoWindow, pos) {
@@ -115,12 +114,12 @@
                 success: function(result){
                     result = JSON.parse(result);
                     console.log("Recieved server response");
-                    console.log(result.a);
+                    // console.log(result.a);
                     var a = result.a;
                     var heatmapData = [];
                     for(var i = 0; i < result.a.length; i++)
                       heatmapData.push(new google.maps.LatLng(a[i][0], a[i][1]));
-                    console.log(heatmapData);
+                    // console.log(heatmapData);
                     var heatmap = new google.maps.visualization.HeatmapLayer({
                       data: heatmapData
                     });
@@ -131,6 +130,19 @@
                 }
             });
           });
+
+          function display_route(elem){
+            curr_i = parseInt($(elem).attr("id")[1]);
+            max_i = parseInt($(elem).attr("id")[3]);
+            for(var i = 0; i < max_i; i++){
+              if(i == curr_i){
+                directionsRenderer[i].setMap(map);
+              }
+              else{
+                directionsRenderer[i].setMap(null);
+              }
+            }
+          }
 
           function calcRoute(){
             src = document.getElementById("src_addr").value;
@@ -154,16 +166,38 @@
               $("#progress_bars").find("#q"+route_i+"_progress").removeClass("active");
               console.log("Total number of incidents on route "+route_i+": "+total_incidents);
             }
-
-            function computed_all_routes(){
-              $("#progress_bars").empty();
-              $("#find_route").show();
+            function computed_all_routes(total_incidents, travel_time, directionsRenderer){
+              $("#find_route").attr("disabled", false);
+              $("#parking_heat_map_btn").attr("disabled", false);
+              var min_i = 0, min_cnt = total_incidents[0];
+              for(var i = 0; i < total_incidents.length; i++){
+                if(total_incidents[i] < min_cnt){
+                  min_i = i;
+                  min_cnt = total_incidents[i];
+                }
+                $("#progress_bars").find('#q'+i+'_progress').parent().remove();
+                $("#progress_bars").find('#q'+i+'_progress_label').remove();
+                $("#progress_bars").append('<label id="'+'q'+i+'_progress_label'+'">Route '+(i+1)+':</br>Number of Incidents: '+total_incidents[i]+', Travel time: '+travel_time[i]+'</label><button id="'+'q'+i+'_'+total_incidents.length+'_display_btn'+'" class="btn btn-info" type="button" onclick="display_route(this)" style="margin-left: 10px;">Display route '+(i+1)+'</button></br>');
+              }
+              for(var i = 0; i < total_incidents.length; i++){
+                  if(i == min_i){
+                    //Highlight label
+                    // $('#q'+i+'_progress_label').css( "background-color", "BlanchedAlmond");
+                    $('#q'+i+'_'+total_incidents.length+'_display_btn').removeClass("btn-info");
+                    $('#q'+i+'_'+total_incidents.length+'_display_btn').addClass("btn-success");
+                    $('#q'+i+'_'+total_incidents.length+'_display_btn').html("Display route "+(parseInt(i)+1)+" (safest)");
+                  }
+                  else{
+                    //Remove path
+                    directionsRenderer[i].setMap(null);
+                  }
+              }
             }
 
             function reset_progress_bar(i){
               var id = 'q'+i+'_progress';
-              $("#progress_bars").append('<div class="progress"> <div class="progress-bar progress-bar-striped active" id="'+id+'" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%"> 0% </div> </div>');
-              $("#find_route").hide();
+              $("#progress_bars").append('<label id="'+id+'_label">Calculating number of incidents on route '+(i+1)+'</label><div class="progress"> <div class="progress-bar progress-bar-striped active" id="'+id+'" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:0%"> 0% </div> </div>');
+              $("#find_route").attr("disabled", true);
             }
 
             function update_progress_bar(total, pending, route_i){
@@ -173,14 +207,19 @@
 
             directionsService.route(request, function(result, status) {
               if (status == 'OK') {
-                console.log(result.routes);
+                $("#progress_bars").empty();
+                for(var i = 0; i < directionsRenderer.length; i++){
+                  directionsRenderer[i].setMap(null);
+                }
+                directionsRenderer = [];
                 $("#parking_lat").val(result.routes[0].legs[0].end_location.lat());
                 $("#parking_long").val(result.routes[0].legs[0].end_location.lng());
                 var num_pending_ajax_calls = [], total_incidents = [], total_steps = [],
-                result_copy = result, routes_remaining = result.routes.length;
+                result_copy = result, routes_remaining = result.routes.length, travel_time = [];
 
                 for(var curr_route = 0; curr_route < result.routes.length; curr_route++){
                     reset_progress_bar(curr_route);
+                    travel_time.push(result.routes[curr_route].legs[0].duration.text);
                     step = result.routes[curr_route].legs[0].steps;
                     total_incidents[curr_route] = 0, total_steps[curr_route] = step.length;
                     num_pending_ajax_calls[curr_route] = step.length;
@@ -204,7 +243,7 @@
                                     routes_remaining--;
                                     computed_incidents(total_incidents[curr_route], false, curr_route);
                                     if(routes_remaining == 0)
-                                        computed_all_routes();
+                                        computed_all_routes(total_incidents, travel_time, directionsRenderer);
                                 }
                             },
                             error: function(error){
@@ -216,7 +255,7 @@
                             }
                         });
                     }
-                    if (curr_route != 0) directionsRenderer.push(new google.maps.DirectionsRenderer());
+                    directionsRenderer.push(new google.maps.DirectionsRenderer());
                     result_copy.routes[0] = result_copy.routes[curr_route];
                     directionsRenderer[curr_route].setDirections(result);
                     directionsRenderer[curr_route].setMap(map);
