@@ -2,8 +2,6 @@ CREATE TABLE user (
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255),
   licence VARCHAR(255),
-  address VARCHAR(255),
-  phone INT(32),
   username VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   PRIMARY KEY(username)
@@ -15,20 +13,16 @@ CREATE TABLE car (
   car_id INT(32) AUTO_INCREMENT NOT NULL,
   owner_username VARCHAR(255) NOT NULL,
   PRIMARY KEY(car_id),
-  FOREIGN KEY(owner_username) REFERENCES user(username)
+  FOREIGN KEY(owner_username) REFERENCES user(username) ON DELETE CASCADE
 );
 CREATE TABLE route (
-  start_long INT(32) NOT NULL,
-  start_lat INT(32) NOT NULL,
-  end_long INT(32) NOT NULL,
-  end_lat INT(32) NOT NULL,
-  distance INT(32) NOT NULL,
-  start_time INT(32) NOT NULL,
-  end_time INT(32) NOT NULL,
+  start_addr VARCHAR(255) NOT NULL,
+  end_addr VARCHAR(255) NOT NULL,
+  time INT(32) NOT NULL,
   route_id INT(32) AUTO_INCREMENT NOT NULL,
   car_id INT(32) NOT NULL,
-  driver_username VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
   PRIMARY KEY(route_id),
-  FOREIGN KEY(car_id) REFERENCES car(car_id),
-  FOREIGN KEY(driver_username) REFERENCES user(username)
+  FOREIGN KEY(car_id) REFERENCES car(car_id) ON DELETE CASCADE,
+  FOREIGN KEY(username) REFERENCES user(username) ON DELETE CASCADE
 );

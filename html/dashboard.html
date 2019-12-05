@@ -214,23 +214,22 @@
                     //Remove path
                     directionsRenderer[i].setMap(null);
                   }
-                  $.ajax({
-                    url: "../node/user/cars_query",
-                    method: "POST",
-                    success: function(result){
-                      cars = JSON.parse(result);
-                        var drive_display = "<select id='select_car'>";
-                        drive_display += "<option>-</option>";
-                      for(var i = 0; i < cars.length; i++){
-                          drive_display += "<option value='"+cars[i].car_id+"' >"+cars[i].brand+" "+cars[i].model+"</option>";
-                      }
-                      drive_display += "</select>&nbsp;&nbsp;&nbsp;&nbsp;";
-                      drive_display += "<button class='btn btn-primary' style='padding 5px;' type='button' id='drive' onclick='insertRoute(this)'>Driver on selected route</button>";
-                      $("#drive_display").append(drive_display);
-                    }
-                  });
-
               }
+              $.ajax({
+                url: "../node/user/cars_query",
+                method: "POST",
+                success: function(result){
+                  cars = JSON.parse(result);
+                    var drive_display = "<select id='select_car'>";
+                    drive_display += "<option>-</option>";
+                  for(var i = 0; i < cars.length; i++){
+                      drive_display += "<option value='"+cars[i].car_id+"' >"+cars[i].brand+" "+cars[i].model+"</option>";
+                  }
+                  drive_display += "</select>&nbsp;&nbsp;&nbsp;&nbsp;";
+                  drive_display += "<button class='btn btn-primary' style='padding 5px;' type='button' id='drive' onclick='insertRoute(this)'>Driver on selected route</button>";
+                  $("#drive_display").append(drive_display);
+                }
+              });
             }
 
             function reset_progress_bar(i){

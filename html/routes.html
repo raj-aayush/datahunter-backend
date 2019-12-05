@@ -41,18 +41,18 @@
           success: function(result){
             routes = JSON.parse(result);
             var table= "<h1 align='center'> My Routes </h1><br><br><table align='center'><tr><td style='width: 100px; color: red; text-align: center';>Route ID</td>";
-            table+="<td style='width: 100px; color: red; text-align: center;'>Car ID</td></tr>";
+            table+="<td style='width: 100px; color: red; text-align: center;'>Car ID</td>";
             table += "<td style='width: 100px; color: red; text-align: center';>Brand</td>";
             table+= "<td style='width: 100px; color: red; text-align: center;'>Model</td>";
-            table+="<td style='width: 100px; color: red; text-align: center;'>Start Address</td></tr>";
+            table+="<td style='width: 100px; color: red; text-align: center;'>Start Address</td>";
             table+="<td style='width: 100px; color: red; text-align: center;'>Dest Address</td></tr>";
 
             table+="<tr><td style='width: 100px;                   '>---------------</td>";
             table+=    "<td style='width: 100px;                   '>---------------</td>";
             table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
             table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
-            table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
-            table+=    "<td style='width: 100px; text-align: right;'>---------------</td></tr>";
+            table+=    "<td style='width: 200px; text-align: right;'>------------------------------</td>";
+            table+=    "<td style='width: 200px; text-align: right;'>------------------------------</td></tr>";
 
             for (var i = 0; i < routes.length; i++) {
               table+="<tr><td style='width: 100px;'>"+routes[i].route_id+"</td>";
