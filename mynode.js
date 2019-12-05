@@ -85,6 +85,10 @@ app.get('/nav/cars', (req, res) => {
     if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/cars.html');
     else  res.redirect('/nav/login');
 });
+app.get('/nav/routes', (req, res) => {
+    if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/routes.html');
+    else  res.redirect('/nav/login');
+});
 app.get('/nav/profile', (req, res) => {
     if (req.session.user && req.cookies.user_id) res.sendFile(__dirname + '/html/profile.html');
     else  res.redirect('/nav/login');
@@ -221,14 +225,20 @@ app.post('/node/car/update'     , function(req, res){
 app.post('/node/car/delete'     , function(req, res){
   car.delete(con, req.body.car_id, res);
 });
-app.use(function (req, res, next) {
-  res.status(404).send("404 error: File not found!")
+app.post('/node/user/insert_route', function (req, res, next) {
+  user.insert_route(con, req.session.user, req.body.start_addr, req.body.end_addr, req.body.car_id, new Date(), res);
+});
+app.post('/node/user/get_routes', function (req, res, next) {
+  user.get_routes(con, req.session.user, res);
 });
 
 app.listen(3000,function(){
   console.log("Started on PORT 3000");
 });
 
+app.use(function (req, res, next) {
+  res.status(404).send("404 error: File not found!")
+});
 function nav(url, fs, res){
   console.log("Opening "+url);
   fs.readFile(url, function(err, data) {

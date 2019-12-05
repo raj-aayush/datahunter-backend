@@ -87,3 +87,29 @@ exports.update = function(con, username, password, fname, lname, res){
     res.end();
   });
 }
+
+exports.get_routes = function(con, username, res){
+  console.log("Querying routes");
+  var q = "SELECT * FROM car c INNER JOIN route r ON c.car_id=r.car_id WHERE username=\""+username+"\"";
+  console.log(q);
+  con.query(q, function (err, result) {
+    if (err) throw err;
+    console.log(result);
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write(JSON.stringify(result));
+    res.end();
+  });
+}
+
+exports.insert_route = function(con, username, start_addr, end_addr, car_id, time, res){
+  console.log("Querying routes");
+  var q = "INSERT INTO route (username, start_addr, end_addr, car_id, time) VALUES (\""+username+"\", \""+start_addr+"\", \""+end_addr+"\", \""+car_id+"\", \""+time+"\")"
+  console.log(q);
+  con.query(q, function (err, result) {
+    if (err) throw err;
+    console.log(result);
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write("true");
+    res.end();
+  });
+}
