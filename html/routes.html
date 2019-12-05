@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <title>My Routes</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  </head>
+  <body class="bg">
+      <style>
+      /* .bg {
+          background-image: url("/img/road.jpeg");
+          background-position: center;
+          background-repeat: no-repeat;
+          height: 100%;
+        } */
+      </style>
+      <!-- <div class="page-header">
+          <h1 align="center" style="color:white;">Cars</h1>
+      </div> -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li><a href="/nav/dashboard">Home</a></li>
+                    <li><a href="/nav/profile">My Profile</a></li>
+                    <li><a href="/nav/cars">My Cars</a></li>
+                    <li><a href="/nav/routes">My Routes</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/nav/logout">Log Out</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <script language="javascript" type="text/javascript">
+      $(document).ready(function(){
+        $.ajax({
+          url: '../node/user/get_routes',
+          method: "POST",
+          success: function(result){
+            routes = JSON.parse(result);
+            var table= "<h1 align='center'> My Routes </h1><br><br><table align='center'><tr><td style='width: 100px; color: red; text-align: center';>Route ID</td>";
+            table+="<td style='width: 100px; color: red; text-align: center;'>Car ID</td></tr>";
+            table += "<td style='width: 100px; color: red; text-align: center';>Brand</td>";
+            table+= "<td style='width: 100px; color: red; text-align: center;'>Model</td>";
+            table+="<td style='width: 100px; color: red; text-align: center;'>Start Address</td></tr>";
+            table+="<td style='width: 100px; color: red; text-align: center;'>Dest Address</td></tr>";
+
+            table+="<tr><td style='width: 100px;                   '>---------------</td>";
+            table+=    "<td style='width: 100px;                   '>---------------</td>";
+            table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
+            table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
+            table+=    "<td style='width: 100px; text-align: right;'>---------------</td>";
+            table+=    "<td style='width: 100px; text-align: right;'>---------------</td></tr>";
+
+            for (var i = 0; i < routes.length; i++) {
+              table+="<tr><td style='width: 100px;'>"+routes[i].route_id+"</td>";
+              table+=    "<td style='width: 100px;'>"+routes[i].car_id+"</td>";
+              table+=    "<td style='width: 100px;'>"+routes[i].brand+"</td>";
+              table+=    "<td style='width: 100px; text-align: right;'>" + routes[i].model + "</td>";
+              table+=    "<td style='width: 100px;'>"+routes[i].start_addr+"</td>";
+              table+=    "<td style='width: 100px;'>"+routes[i].end_addr+"</td></tr>";
+            }
+             table+="</table><br><br>";
+             $('body').append(table);
+          }
+        });
+
+      });
+
+    </script>
+  </body>
+</html>
