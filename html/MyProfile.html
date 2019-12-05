@@ -1,0 +1,70 @@
+<html>
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+      }
+
+    .bg {
+        /* The image used */
+        background-image: url("road.jpeg");
+
+        /* Full height */
+        height: 100%;
+
+        /* Center and scale the image nicely */
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
+    <head>
+        <title>MyProfile</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"  crossorigin="anonymous">
+    </head>
+
+    <body class="container bg">
+      body{ margin:0 auto; }
+        <div class="page-header">
+            <h1 align="center" style="color:white;">MyProfile</h1>
+        </div>
+
+        <div class="container row">
+            <div class="jumbotron col-sm-12 pull-center">
+                <form align="center" action="/nav/signup" method="post">
+                    <div>
+                      <label>First Name: </label>
+                        <tr ng-repeat="item in data">
+                          <td>{first_name}</td>
+                          <td><button type='button' ng-click="edit(item)">Edit</button></td>
+                        </tr>
+                    </div>
+                    <div>
+                      <label>Last Name: </label>
+                        <tr ng-repeat="item in data">
+                          <td>{last_name}</td>
+                          <td><button type='button' ng-click="edit(item)">Edit</button></td>
+                        </tr>
+                    </div>
+                    <div>
+                      <label> Username: </label>
+                        <tr ng-repeat="item in data">
+                          <td>{username}</td>
+                          <td><button type='button' ng-click="edit(item)">Edit</button></td>
+                        </tr>
+                    </div>
+                    <div>
+                      <label> Password: </label>
+                        <tr ng-repeat="item in data">
+                          <td>{password}</td>
+                          <td><button type='button' ng-click="edit(item)">Edit</button></td>
+                        </tr>
+                    </div>
+                    <div>
+                        <input class="btn btn-primary" value="Back" onclick="history.back()"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
